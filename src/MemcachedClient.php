@@ -6,7 +6,7 @@ namespace newbie67\memcached;
 
 use newbie67\memcached\Domain\ClientInterface;
 
-final class Client implements ClientInterface
+final class MemcachedClient implements ClientInterface
 {
     /**
      * @var false|resource
