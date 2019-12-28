@@ -1,0 +1,3 @@
+# Also you can move it to global .gitignore
+.idea/
+vendor/

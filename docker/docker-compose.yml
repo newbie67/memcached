@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  php:
+    container_name: drimsim_php
+    build: php
+    volumes:
+      - ./../:/app
+
+  memcached:
+    container_name: drimsim_memcached
+    image: bitnami/memcached:latest
+    expose:
+      - 11211
