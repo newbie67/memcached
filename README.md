@@ -34,7 +34,15 @@ For running tests:
 vendor/bin/phpunit tests
 ```
 
-Memcached is a REAL storage. So, to test it you should use real
-memcached server. It means that tests should be running inside docker
-container and connect to real memcached server,
-or edit your tests/config.php.
+# Комментарий
+Мемкеш - это реальный сторадж.
+Его невозможно тестировать, если клиент обращается к фейковому серверу.
+Я понимаю, что в какой-то идеальной системе я должен написать имитацию
+сервера, прокинуть её в мемкеш и тестировать с имитацией. Но таким
+образом я ничего не проверю - т.к. реальный сервер может оказаться
+совсем другой.
+
+
+Могу немного подтвердить свои слова ссылками:
+    - https://github.com/php-memcached-dev/php-memcached/blob/master/tests/config.inc Разработчики php-memcached думают так же
+    - https://github.com/phpredis/phpredis/blob/develop/tests/make-cluster.sh Разработчики php-redis думают так же
