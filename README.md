@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/newbie67/memcached.svg?branch=master)](https://travis-ci.org/newbie67/memcached)
+
 # Memcached library
 This library must implements add/delete/set command for memcached web-server https://github.com/memcached/memcached/blob/master/doc/protocol.txt
 
