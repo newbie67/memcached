@@ -3,6 +3,7 @@ language: php
 php:
   - '7.4'
 
+before_script: composer install
 
 #before_install:
 #  - ./.travis-update-docker-compose
