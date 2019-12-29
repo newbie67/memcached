@@ -4,94 +4,144 @@ declare(strict_types=1);
 
 namespace newbie67\memcached\Tests;
 
-use newbie67\memcached\MemcachedClient;
 use newbie67\memcached\Memcached;
 use PHPUnit\Framework\TestCase;
+use newbie67\memcached\MemcachedException;
 
 class MemcachedTest extends TestCase
 {
     /**
-     * @var Memcached
+     *
      */
-    private ?Memcached $memcached = null;
+    public function testInvalidKey()
+    {
+        $client = $this->buildClient();
+        try {
+            $key = 'Some Incorrect ' . "\r\n" . 'key';
+            $client->get($key);
 
+            self::fail('Exception not thrown');
+        } catch (\Exception $exception) {
+            self::assertEquals(MemcachedException::class, get_class($exception));
+            self::assertEquals(
+                'Key is not valid.',
+                $exception->getMessage()
+            );
+        }
+
+        try {
+            $key = 'Some Incorrect key';
+            $client->delete($key);
+
+            self::fail('Exception not thrown');
+        } catch (\Exception $exception) {
+            self::assertEquals(MemcachedException::class, get_class($exception));
+            self::assertEquals(
+                'Key is not valid.',
+                $exception->getMessage()
+            );
+        }
+
+        try {
+            $key = 'Some Incorrect ' . "\t" . 'key';
+            $client->set($key, 'val');
+
+            self::fail('Exception not thrown');
+        } catch (\Exception $exception) {
+            self::assertEquals(MemcachedException::class, get_class($exception));
+            self::assertEquals(
+                'Key is not valid.',
+                $exception->getMessage()
+            );
+        }
+    }
+
+    /**
+     *
+     */
+    public function testThrowExceptions()
+    {
+        $client = $this->buildClient();
+
+        try {
+            $client->delete('key', true);
+            self::fail('Exception not thrown');
+        } catch (\Exception $exception) {
+            self::assertEquals(MemcachedException::class, get_class($exception));
+            self::assertEquals(
+                'Key "key" is not enabled.',
+                $exception->getMessage()
+            );
+        }
+
+        try {
+            $client->get('key', true);
+            $this->fail('Exception not thrown');
+        } catch (\Exception $exception) {
+            self::assertEquals(MemcachedException::class, get_class($exception));
+            self::assertEquals(
+                'Key "key" is not enabled.',
+                $exception->getMessage()
+            );
+        }
+    }
+
+    /**
+     * @throws MemcachedException
+     */
     public function testDelete()
     {
-        $this->expectExceptionMessage('Key "key" is not enabled.');
-        $this->memcached->delete('key', true);
+        $client = $this->buildClient();
 
-        self::assertFalse($this->memcached->delete('key2'));
+        self::assertFalse($client->delete('key'));
     }
 
-    public function testGet()
+    /**
+     * @throws MemcachedException
+     */
+    public function testSet()
     {
-        $this->expectExceptionMessage('Key "key" is not enabled.');
-        $this->memcached->get('key', true);
+        $client = $this->buildClient();
+        $client->set('key', 'value');
+        self::assertEquals('value', $client->get('key'));
 
-        $key = 'Some Incorrect ' . "\r\n" . 'key';
-
-        $this->expectExceptionMessage('Key is not valid.');
-        $this->memcached->get($key);
-
-        $val = $this->memcached->get('key2');
-        self::assertFalse($val);
+        $client->delete('key');
     }
 
-    public function testBaseSet()
+    /**
+     * @throws MemcachedException
+     */
+    public function testReal()
     {
-        $this->memcached->set('key', 'value');
-        self::assertEquals('value', $this->memcached->get('key'));
+        $client = $this->buildClient();
+        self::assertFalse($client->get('key2'));
 
-        $this->expectExceptionMessage('Key "key" already setted.');
-        $this->memcached->set('key', 'value', 0, true);
+        $client->set('key', 'value');
+        self::assertEquals('value', $client->get('key'));
+        $client->delete('key');
 
-        $this->memcached->delete('key');
-    }
-
-    public function testRealRelate()
-    {
-        $this->memcached->set('key', 'value');
-        self::assertEquals('value', $this->memcached->get('key'));
-        $this->memcached->delete('key');
-        self::assertFalse($this->memcached->get('key'));
-    }
-
-    public function extendedSet()
-    {
         $value = "\r\n" . 'someString' . "\r\n";
-        $this->memcached->set('key', $value);
-        self::assertEquals($value, $this->memcached->get('key'));
+        $client->set('key2', $value);
+        self::assertEquals($value, $client->get('key2'));
 
-        $this->memcached->delete('key');
+        $client->delete('key2');
     }
 
-    public function testExpired()
-    {
-        $value = "\r\n" . 'someString' . "\r\n";
-        $this->memcached->set('key', $value);
-        self::assertEquals($value, $this->memcached->get('key'));
-
-        $this->memcached->delete('key');
-    }
+//    public function testExpired()
+//    {
+//        $value = "\r\n" . 'someString' . "\r\n";
+//        $this->memcached->set('key', $value);
+//        self::assertEquals($value, $this->memcached->get('key'));
+//
+//        $this->memcached->delete('key');
+//    }
 
     /**
      * @inheritDoc
      */
-    protected function setUp(): void
+    private function buildClient(): Memcached
     {
         $config = require __DIR__ . '/config.php';
-        $client = new MemcachedClient($config['memcached']['host'], $config['memcached']['port']);
-        $this->memcached = new Memcached($client);
-
-        parent::setUp();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function tearDown(): void
-    {
-        $this->memcached = null;
-        parent::tearDown();
+        return new Memcached($config['memcached']['host'], $config['memcached']['port']);
     }
 }
