@@ -123,18 +123,34 @@ class MemcachedTest extends TestCase
         $value = "\r\n" . 'someString' . "\r\n";
         $client->set('key2', $value);
         self::assertEquals($value, $client->get('key2'));
-
         $client->delete('key2');
+
+        $value = "END\r\n";
+        $client->set('key3', $value);
+        self::assertEquals($value, $client->get('key3'));
+        $client->delete('key3');
+
+        $value = "\r\n
+        \r\n";
+        $client->set('key4', $value);
+        self::assertEquals($value, $client->get('key4'));
+        $client->delete('key4');
     }
 
-//    public function testExpired()
-//    {
-//        $value = "\r\n" . 'someString' . "\r\n";
-//        $this->memcached->set('key', $value);
-//        self::assertEquals($value, $this->memcached->get('key'));
-//
-//        $this->memcached->delete('key');
-//    }
+    /**
+     * @throws MemcachedException
+     */
+    public function testExpired()
+    {
+        $client = $this->buildClient();
+
+        $value = "\r\n" . 'someString' . "\r\n";
+        $client->set('key', $value, 1);
+
+        self::assertEquals($value, $client->get('key'));
+        sleep(2);
+        self::assertFalse($client->get('key'));
+    }
 
     /**
      * @inheritDoc
