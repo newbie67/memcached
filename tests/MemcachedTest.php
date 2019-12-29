@@ -13,52 +13,6 @@ class MemcachedTest extends TestCase
     /**
      *
      */
-    public function testInvalidKey()
-    {
-        $client = $this->buildClient();
-        try {
-            $key = 'Some Incorrect ' . "\r\n" . 'key';
-            $client->get($key);
-
-            self::fail('Exception not thrown');
-        } catch (\Exception $exception) {
-            self::assertEquals(MemcachedException::class, get_class($exception));
-            self::assertEquals(
-                'Key is not valid.',
-                $exception->getMessage()
-            );
-        }
-
-        try {
-            $key = 'Some Incorrect key';
-            $client->delete($key);
-
-            self::fail('Exception not thrown');
-        } catch (\Exception $exception) {
-            self::assertEquals(MemcachedException::class, get_class($exception));
-            self::assertEquals(
-                'Key is not valid.',
-                $exception->getMessage()
-            );
-        }
-
-        try {
-            $key = 'Some Incorrect ' . "\t" . 'key';
-            $client->set($key, 'val');
-
-            self::fail('Exception not thrown');
-        } catch (\Exception $exception) {
-            self::assertEquals(MemcachedException::class, get_class($exception));
-            self::assertEquals(
-                'Key is not valid.',
-                $exception->getMessage()
-            );
-        }
-    }
-
-    /**
-     *
-     */
     public function testThrowExceptions()
     {
         $client = $this->buildClient();
@@ -150,6 +104,64 @@ class MemcachedTest extends TestCase
         self::assertEquals($value, $client->get('key'));
         sleep(2);
         self::assertFalse($client->get('key'));
+    }
+
+    /**
+     * @throws MemcachedException
+     */
+    public function testInvalidKey()
+    {
+        $client = $this->buildClient();
+
+        $unavailableKeys = [
+            ' ', "\n", "
+", "\0",
+        ];
+
+        foreach ($unavailableKeys as $key) {
+            try {
+                $client->get($key);
+                self::fail('Exception not thrown');
+            } catch (\Exception $exception) {
+                self::assertEquals(MemcachedException::class, get_class($exception));
+                self::assertEquals(
+                    'Key is not valid.',
+                    $exception->getMessage()
+                );
+            }
+
+            try {
+                $client->set($key, 'val');
+                self::fail('Exception not thrown');
+            } catch (\Exception $exception) {
+                self::assertEquals(MemcachedException::class, get_class($exception));
+                self::assertEquals(
+                    'Key is not valid.',
+                    $exception->getMessage()
+                );
+            }
+
+            try {
+                $client->delete($key);
+                self::fail('Exception not thrown');
+            } catch (\Exception $exception) {
+                self::assertEquals(MemcachedException::class, get_class($exception));
+                self::assertEquals(
+                    'Key is not valid.',
+                    $exception->getMessage()
+                );
+            }
+        }
+
+        $allowedKeys = [
+            'key', "\t", "\r", "`!-+\\", "\x0B",
+        ];
+
+        foreach ($allowedKeys as $key) {
+            self::assertTrue($client->set($key, 'val'));
+            self::assertEquals('val', $client->get($key));
+            self::assertTrue($client->delete($key));
+        }
     }
 
     /**

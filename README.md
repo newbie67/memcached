@@ -24,6 +24,9 @@ cp resources/phpcs-pre-commit.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
+If you use dev env or don't have php, you can manually edit it for
+running inside docker container.
+
 #### Test
 
 For running tests:

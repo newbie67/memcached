@@ -115,14 +115,16 @@ class Memcached
     /**
      * @param string $key
      *
-     * @todo Запретить только пробелы и переносы строк, а потом на тесте сделать подстановку рандомного символа
-     *       Похоже можно любой символ, т.к. телнет позволяет в качестве ключа использовать даже "\t"
-     *
      * @throws MemcachedException
      */
     private function validateKey(string $key)
     {
-        if (strlen($key) > 250 || false === (bool)preg_match('/^[A-ZА-ЯЁ0-9_-]+$/ui', $key)) {
+        if (
+            strlen($key) > 250
+            || false !== strpos($key, "\n")
+            || false !== strpos($key, " ")
+            || false !== strpos($key, "\0")
+        ) {
             throw new MemcachedException('Key is not valid.');
         }
     }
