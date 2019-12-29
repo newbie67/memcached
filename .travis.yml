@@ -1,0 +1,11 @@
+language: php
+
+php:
+  - '7.4'
+
+
+#before_install:
+#  - ./.travis-update-docker-compose
+#
+#services:
+#  - docker
