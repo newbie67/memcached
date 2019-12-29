@@ -16,10 +16,15 @@ class Memcached
      *
      * @param string $addr
      * @param int    $port
+     *
+     * @throws MemcachedException
      */
     public function __construct(string $addr, int $port)
     {
-        $this->connection = fsockopen($addr, $port);
+        $this->connection = @fsockopen($addr, $port);
+        if (false === $this->connection) {
+            throw new MemcachedException('Can\'t connect to ' . $addr . ':' . $port);
+        }
     }
 
     /**
@@ -110,6 +115,16 @@ class Memcached
         }
 
         $this->unknownResponse($response);
+    }
+
+    /**
+     *
+     */
+    public function __destruct()
+    {
+        if ($this->connection) {
+            fclose($this->connection);
+        }
     }
 
     /**
