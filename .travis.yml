@@ -1,12 +1,27 @@
+sudo: required
+
 language: php
 
 php:
   - '7.4'
 
-before_script: composer install
+services:
+  - docker
 
-#before_install:
-#  - ./.travis-update-docker-compose
-#
-#services:
-#  - docker
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/1.24.1/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+before_script:
+  - composer install
+  - docker-compose -f docker/docker-compose.yml up -d --build
+
+script:
+  - docker exec -it drimsim_php vendor/bin/phpcs -p
+  - docker exec -it drimsim_php vendor/bin/phpunit
+
+after_script:
+  - docker stop $(docker ps -q)
+  - docker rm $(docker ps -a -q)
